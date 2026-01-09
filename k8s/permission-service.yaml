@@ -1,0 +1,52 @@
+# k8s/permission-service.yaml
+# Define el despliegue y el servicio para el Permission Service.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: permission-service-deployment
+  labels:
+    app: permission-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: permission-service
+  template:
+    metadata:
+      labels:
+        app: permission-service
+    spec:
+      containers:
+      - name: permission-service
+        # IMPORTANTE: Reemplaza 'TU_ID_DE_PROYECTO' con tu ID de proyecto de Google Cloud.
+        image: us-central1-docker.pkg.dev/himfg-476514/himfg-repo/permission-service:v1
+        ports:
+        - containerPort: 8080
+        env:
+        # IMPORTANTE: Reemplaza 'IP_DE_TU_CLOUDSQL' por la IP privada de tu instancia de Cloud SQL.
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:postgresql://10.11.192.3/micros_db"
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: username
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: permission-service
+spec:
+  selector:
+    app: permission-service
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+  type: ClusterIP

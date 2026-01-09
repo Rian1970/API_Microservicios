@@ -1,0 +1,95 @@
+server:
+  port: 8081
+  forward-headers-strategy: framework
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        # Service Routes
+        - id: auth-service
+          uri: http://auth-service:8082
+          predicates:
+            - Path=/auth/**
+          filters:
+            - JwtAuthenticationFilter
+
+        - id: user-service
+          uri: http://user-service:8083
+          predicates:
+            - Path=/users/**
+          filters:
+            - JwtAuthenticationFilter
+            - RewritePath=/users/(?<segment>.*), /users/${segment}
+
+        - id: permission-service
+          uri: http://permission-service:8084
+          predicates:
+            - Path=/permissions/**
+          filters:
+            - JwtAuthenticationFilter
+            - RewritePath=/permissions/(?<segment>.*), /permissions/${segment}
+
+        - id: role-service
+          uri: http://role-service:8085
+          predicates:
+            - Path=/roles/**
+          filters:
+            - JwtAuthenticationFilter
+            - RewritePath=/roles/(?<segment>.*), /roles/${segment}
+
+        # API Docs Routes
+        - id: auth-api-docs
+          uri: http://auth-service:8082
+          predicates:
+            - Path=/v3/api-docs/auth
+          filters:
+            - RewritePath=/v3/api-docs/auth, /v3/api-docs
+
+        - id: user-api-docs
+          uri: http://user-service:8083
+          predicates:
+            - Path=/v3/api-docs/user
+          filters:
+            - RewritePath=/v3/api-docs/user, /v3/api-docs
+
+        - id: permission-api-docs
+          uri: http://permission-service:8084
+          predicates:
+            - Path=/v3/api-docs/permission
+          filters:
+            - RewritePath=/v3/api-docs/permission, /v3/api-docs
+
+        - id: role-api-docs
+          uri: http://role-service:8085
+          predicates:
+            - Path=/v3/api-docs/role
+          filters:
+            - RewritePath=/v3/api-docs/role, /v3/api-docs
+
+jwt:
+  secret: ${JWT_SECRET}
+  master-token: ${JWT_MASTER_TOKEN}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: auth
+        url: /v3/api-docs/auth
+      - name: user
+        url: /v3/api-docs/user
+      - name: permission
+        url: /v3/api-docs/permission
+      - name: role
+        url: /v3/api-docs/role
+  api-docs:
+    path: /v3/api-docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

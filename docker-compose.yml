@@ -1,0 +1,97 @@
+services:
+  postgres-db:
+    image: postgres:13-alpine
+    container_name: postgres-db
+    environment:
+      POSTGRES_DB: authdb
+      POSTGRES_USER: ${SPRING_DATASOURCE_USERNAME}
+      POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      TZ: America/Mexico_City
+    ports:
+      - "5431:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - auth-network
+
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    ports:
+      - "8082:8082"
+    env_file:
+      - .env
+    depends_on:
+      - postgres-db
+    networks:
+      - auth-network
+
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    ports:
+      - "8083:8083"
+    env_file:
+      - .env
+    depends_on:
+      - postgres-db
+    networks:
+      - auth-network
+
+  permission-service:
+    build:
+      context: ./permission-service
+      dockerfile: Dockerfile
+    container_name: permission-service
+    ports:
+      - "8084:8084"
+    env_file:
+      - .env
+    depends_on:
+      - postgres-db
+    networks:
+      - auth-network
+
+  role-service:
+    build:
+      context: ./role-service
+      dockerfile: Dockerfile
+    container_name: role-service
+    ports:
+      - "8085:8085"
+    env_file:
+      - .env
+    depends_on:
+      - postgres-db
+    networks:
+      - auth-network
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8081:8081"
+    env_file:
+      - .env
+    depends_on:
+      - auth-service
+      - user-service
+      - permission-service
+      - role-service
+    networks:
+      - auth-network
+
+networks:
+  auth-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    name: api_spring_boot

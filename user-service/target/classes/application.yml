@@ -1,0 +1,22 @@
+server:
+  port: 8083
+  forward-headers-strategy: framework
+
+spring:
+  application:
+    name: user-service
+  datasource:
+    url: jdbc:postgresql://postgres-db:5432/authdb
+    username: user
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
